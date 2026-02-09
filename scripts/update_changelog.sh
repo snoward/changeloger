@@ -1,0 +1,35 @@
+#!/bin/sh
+set -e
+
+RELEASE_NOTES_FILE="release_notes.txt"
+if [ ! -s "$RELEASE_NOTES_FILE" ]; then
+    echo "File with release notes does not exist"
+    exit 0
+fi
+
+CHANGELOG_FILE="CHANGELOG.md"
+TEMP_FILE="changelog_tmp.md"
+{
+    echo "$CHANGELOG_HEADER"
+    echo "## $(date +'%d.%m.%Y')"
+    cat $RELEASE_NOTES_FILE
+    echo ""
+    if [ -s "$CHANGELOG_FILE" ]; then
+        tail -n +2 "$CHANGELOG_FILE" | sed '$d'
+    fi
+} > "$TEMP_FILE"
+
+mv "$TEMP_FILE" "$CHANGELOG_FILE"
+CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+echo "Last changelog update: ${CURRENT_DATE}" >> "$CHANGELOG_FILE"
+
+git config user.email "gitlab_ci@skbkontur.ru"
+git config user.name "Quality Bot"
+git add "$CHANGELOG_FILE"
+
+if ! git diff --cached --quiet; then
+  git commit -m "update changelog [skip ci]" || echo "No changes to commit"
+  git push "https://oauth2:${CHANGES_MD_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
+else
+    echo "No changes to commit."
+fi
