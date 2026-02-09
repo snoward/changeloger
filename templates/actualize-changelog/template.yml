@@ -22,7 +22,7 @@ actualize-changelog:
       fi
 
       CHANGELOG_FILE="$[[ inputs.changelog_file ]]"
-      TEMP_FILE="changelog_tmp.md"
+      TEMP_FILE="$(mktemp)"
       {
           echo "$[[ inputs.changelog_header ]]"
           echo "## $(date +'%d.%m.%Y')"
