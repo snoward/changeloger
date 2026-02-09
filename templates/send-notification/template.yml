@@ -6,13 +6,15 @@ spec:
       default: $TELEGRAM_TOKEN
     telegram_chat_id:
       default: $TELEGRAM_CHAT_ID
+    release_notes_file:
+      default: release_notes.txt
 ---
 send-notification:
   stage: $[[ inputs.stage ]]
   image: docker-proxy.kontur.host/alpine/curl:latest
   script:
     - |
-      RELEASE_NOTES=$(cat release_notes.txt)
+      RELEASE_NOTES=$(cat $[[ inputs.release_notes_file ]])
       TEXT="Завершен деплой ${CI_PROJECT_TITLE}%0ADeploy status: ✅%0AЗапустил: ${GITLAB_USER_NAME}%0A%0AСписок задач:"
       curl -s --max-time 10 \
         -d "chat_id=$[[ inputs.telegram_chat_id ]]&disable_web_page_preview=1&text=${TEXT}%0A${RELEASE_NOTES}" \

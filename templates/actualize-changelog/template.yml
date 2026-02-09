@@ -6,24 +6,27 @@ spec:
       default: "Список релизов"
     changes_md_token:
       default: $CHANGES_MD_TOKEN
+    changelog_file:
+      default: CHANGELOG.md
+    release_notes_file:
+      default: release_notes.txt
 ---
 actualize-changelog:
   stage: $[[ inputs.stage ]]
   image: docker-proxy.kontur.host/alpine/git:latest
   script:
     - |
-      RELEASE_NOTES_FILE="release_notes.txt"
-      if [ ! -s "$RELEASE_NOTES_FILE" ]; then
+      if [ ! -s "$[[ inputs.release_notes_file ]]" ]; then
           echo "File with release notes does not exist"
           exit 0
       fi
 
-      CHANGELOG_FILE="CHANGELOG.md"
+      CHANGELOG_FILE="$[[ inputs.changelog_file ]]"
       TEMP_FILE="changelog_tmp.md"
       {
           echo "$[[ inputs.changelog_header ]]"
           echo "## $(date +'%d.%m.%Y')"
-          cat "$RELEASE_NOTES_FILE"
+          cat "$[[ inputs.release_notes_file ]]"
           echo ""
           if [ -s "$CHANGELOG_FILE" ]; then
               tail -n +2 "$CHANGELOG_FILE" | sed '$d'

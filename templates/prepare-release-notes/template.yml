@@ -4,6 +4,10 @@ spec:
       default: deploy
     changes_md_token:
       default: $CHANGES_MD_TOKEN
+    changelog_file:
+      default: CHANGELOG.md
+    release_notes_file:
+      default: release_notes.txt
 ---
 prepare-release-notes:
   stage: $[[ inputs.stage ]]
@@ -13,7 +17,7 @@ prepare-release-notes:
     - apt-get update && apt-get install -y git curl jq
   script:
     - |
-      CHANGELOG_FILE="CHANGELOG.md"
+      CHANGELOG_FILE="$[[ inputs.changelog_file ]]"
       touch "$CHANGELOG_FILE"
       LAST_DATE=$(tail -n 1 "$CHANGELOG_FILE" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z' || echo "")
       RELEASE_NOTES=$(curl --header "Authorization: Bearer $[[ inputs.changes_md_token ]]" \
@@ -23,9 +27,9 @@ prepare-release-notes:
           echo "No new merge requests found since $LAST_DATE."
           exit 0
       fi
-      echo "${RELEASE_NOTES}" > release_notes.txt
+      echo "${RELEASE_NOTES}" > "$[[ inputs.release_notes_file ]]"
   artifacts:
     paths:
-      - release_notes.txt
+      - $[[ inputs.release_notes_file ]]
     expire_in: 1 day
   allow_failure: true
