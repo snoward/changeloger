@@ -93,14 +93,6 @@ include:
 stages:
   - deploy
   - notify
-
-actualize-changelog:
-  needs:
-    - prepare-release-notes
-
-send-notification:
-  needs:
-    - prepare-release-notes
 ```
 
 ## Required CI/CD Variables

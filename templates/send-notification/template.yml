@@ -12,6 +12,8 @@ spec:
 send-notification:
   stage: $[[ inputs.stage ]]
   image: docker-proxy.kontur.host/alpine/curl:latest
+  needs:
+    - prepare-release-notes
   script:
     - |
       RELEASE_NOTES=$(cat $[[ inputs.release_notes_file ]])

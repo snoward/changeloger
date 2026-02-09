@@ -14,6 +14,8 @@ spec:
 actualize-changelog:
   stage: $[[ inputs.stage ]]
   image: docker-proxy.kontur.host/alpine/git:latest
+  needs:
+    - prepare-release-notes
   script:
     - |
       if [ ! -s "$[[ inputs.release_notes_file ]]" ]; then
