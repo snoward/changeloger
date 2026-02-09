@@ -2,6 +2,8 @@ spec:
   inputs:
     stage:
       default: deploy
+    changes_md_token:
+      default: $CHANGES_MD_TOKEN
 ---
 prepare-release-notes:
   stage: $[[ inputs.stage ]]
@@ -14,7 +16,7 @@ prepare-release-notes:
       CHANGELOG_FILE="CHANGELOG.md"
       touch "$CHANGELOG_FILE"
       LAST_DATE=$(tail -n 1 "$CHANGELOG_FILE" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z' || echo "")
-      RELEASE_NOTES=$(curl --header "Authorization: Bearer ${CHANGES_MD_TOKEN}" \
+      RELEASE_NOTES=$(curl --header "Authorization: Bearer $[[ inputs.changes_md_token ]]" \
         --url "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests?state=merged&updated_after=${LAST_DATE}" \
         | jq -r --arg DATE "$LAST_DATE" 'map(select(.merged_at > $DATE)) | "- " + .[].title')
       if [ -z "$RELEASE_NOTES" ]; then

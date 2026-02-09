@@ -2,6 +2,10 @@ spec:
   inputs:
     stage:
       default: deploy
+    telegram_token:
+      default: $TELEGRAM_TOKEN
+    telegram_chat_id:
+      default: $TELEGRAM_CHAT_ID
 ---
 send-notification:
   stage: $[[ inputs.stage ]]
@@ -11,5 +15,5 @@ send-notification:
       RELEASE_NOTES=$(cat release_notes.txt)
       TEXT="Завершен деплой ${CI_PROJECT_TITLE}%0ADeploy status: ✅%0AЗапустил: ${GITLAB_USER_NAME}%0A%0AСписок задач:"
       curl -s --max-time 10 \
-        -d "chat_id=${TELEGRAM_CHAT_ID}&disable_web_page_preview=1&text=${TEXT}%0A${RELEASE_NOTES}" \
-        "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" > /dev/null
+        -d "chat_id=$[[ inputs.telegram_chat_id ]]&disable_web_page_preview=1&text=${TEXT}%0A${RELEASE_NOTES}" \
+        "https://api.telegram.org/bot$[[ inputs.telegram_token ]]/sendMessage" > /dev/null
