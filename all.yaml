@@ -1,0 +1,42 @@
+variables:
+  DEFAULT_CI_TEMPLATES_DIR: "$CI_BUILDS_DIR/$CI_JOB_ID/.cacabinet-ci-templates"
+
+.PrepareReleaseNotes:
+  image: docker-proxy.kontur.host/ubuntu:24.04
+  before_script:
+    - sed -i 's|http://archive.ubuntu.com/ubuntu|mirror://mirrorlist-ubuntu.kontur.host/mirrors.txt|g' /etc/apt/sources.list.d/ubuntu.sources
+    - apt-get update && apt-get install -y git curl jq
+    - git clone --depth 1 --branch $DEFAULT_CI_TEMPLATES_BRANCH https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/cacabinet/teamtools/ci-templates.git $DEFAULT_CI_TEMPLATES_DIR
+  script:
+    - source "$DEFAULT_CI_TEMPLATES_DIR/scripts/prepare_release_notes.sh"
+  artifacts:
+    paths:
+      - release_notes.txt
+    expire_in: 1 day
+  allow_failure: true
+
+.ActualizeChangelog:
+  image: docker-proxy.kontur.host/alpine/git:latest 
+  variables:
+    CHANGELOG_HEADER: "Список релизов"
+  before_script:
+    - git clone --depth 1 --branch $DEFAULT_CI_TEMPLATES_BRANCH https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/cacabinet/teamtools/ci-templates.git $DEFAULT_CI_TEMPLATES_DIR
+  script:
+    - source "$DEFAULT_CI_TEMPLATES_DIR/scripts/update_changelog.sh"
+  allow_failure: true
+
+.SendNotification:
+  image: docker-proxy.kontur.host/alpine/curl:latest
+  variables:
+    TELEGRAM_TOKEN: ""
+    TELEGRAM_CHAT_ID: ""
+    URL: "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage"
+    TEXT: |-
+       Завершен деплой $CI_PROJECT_TITLE
+       Deploy status: ✅
+       Запустил:+$GITLAB_USER_NAME
+
+       Список задач:
+  script:
+    - RELEASE_NOTES=$(cat release_notes.txt)
+    - curl -s --max-time 10 -d "chat_id=$TELEGRAM_CHAT_ID&disable_web_page_preview=1&text=$TEXT%0A$RELEASE_NOTES" $URL > /dev/null
